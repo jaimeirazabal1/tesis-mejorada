@@ -1,0 +1,142 @@
+#!/usr/bin/env node
+const KEY = 'nome-do-cookie';
+const SECRET = 'chave-secreta-aqui!';
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('app-tesis:server');
+var http = require('http').createServer(app)
+var io = require('socket.io').listen(http, {log:true, origins:'*:*'})
+var model_user = require("../models/user")();
+var model_visitantes = require("../models/visitantes")();
+var model_prioridad = require("../models/prioridad")();
+var userCount = 0;
+var visitanteCount = 0;
+model_user.find(function(result,error){
+  userCount = result.rowCount;
+})
+model_visitantes.find(function(result,error){
+  visitanteCount = result.rowCount;
+})
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = parseInt(process.env.PORT, 10) || 3000;
+app.set('port', port);
+var cookie = app.get("cookie")
+var store = app.get("store")
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+/**
+ * Create HTTP server.
+ */
+
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+http.listen(port);
+// Compartilhando a sessão válida do Express no Socket.IO
+io.use(function(socket, next) {
+  var data = socket.request;
+  cookie(data, {}, function(err) {
+    var sessionID = data.signedCookies[KEY];
+    store.get(sessionID, function(err, session) {
+      if (err || !session) {
+        return next(new Error('Acesso negado!'));
+      } else {
+        socket.handshake.session = session;
+        return next();
+      }
+    });
+  });
+});
+
+// Iniciando uma conexão com Socket.IO.
+io.sockets.on('connection', function (client) {
+  var session = client.handshake.session;
+  client.on("cambiar_status_solicitud",function(id){
+    client.broadcast.emit('cambiar_status_solicitud', {id : id});
+  })
+  client.on('login', function (msg) {
+    if (session.user != "undefined" && session.user) {
+      client.broadcast.emit('toClient', {usuario : session.user.rows[0].correo});
+    }else{
+      session.user = false;
+    }
+  });
+  client.on('nueva_solicitud', function (datos) {
+    
+    model_prioridad.findById(datos.prioridad_id,function(result,err){
+      // console.log(err)
+      if (err) {
+        console.log(err)
+      };
+      //console.log(result)
+      datos.prioridad_id=result.rows[0].descripcion;
+      model_user.findById(datos.usuario_id,function(result2,err2){
+        if (err2) {
+          console.log(err2)
+        };
+        datos.usuario_id = result2.rows[0].correo;
+        client.broadcast.emit('nueva_solicitud', datos);
+      })
+    });
+  });
+  setInterval(function(){
+    model_user.find(function(result,error){
+      if (result.rowCount > userCount) {
+        userCount = result.rowCount;
+        client.emit('usuarios', result);
+      };
+    })
+    model_visitantes.find(function(result,error){
+      if (result.rowCount>visitanteCount) {
+        visitanteCount = result.rowCount;
+        client.emit('visitantes', result)
+      };
+      
+    })
+  },2000)
+});
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error('Port ' + port + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error('Port ' + port + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  debug('Listening on port ' + server.address().port);
+}

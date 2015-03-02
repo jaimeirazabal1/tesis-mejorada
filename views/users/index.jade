@@ -1,0 +1,62 @@
+extends ../layout
+block content
+	script(src="/javascripts/users/index.js")
+	div.panel.panel-default
+		div.panel-heading
+			h3="Usuarios"
+			hr
+			div(class="btn-group btn-group-xs",role="group",aria-label="Extra-small button group")
+				button(class="btn btn-success btn-xs crear_usuario",data-toggle="modal",data-target="#myModal")="Nuevo Usuario"
+				&nbsp;
+				a(href="/solicitud/",class=" crear_usuario pull-right",id="btn-logout")="Solicitudes"
+			a(href="/users/logout",class="btn btn-danger btn-xs crear_usuario pull-right",id="btn-logout")="Logout"
+		table.table.table-condensed.table-bordered.table-striped
+			thead
+				th="Id"
+				th="Correo"
+				th="Creado"
+				th="Acciones"
+			each val in usuarios
+				tr
+					td=val.id
+					td=val.correo
+					td=val.created
+					td
+						div(class="btn-group btn-group-xs",role="group",aria-label="Extra-small button group")
+							button(class="btn btn-danger btn-xs eliminar_usuario",id="#{val.id}")="Eliminar"
+							button(class="btn btn-default btn-xs cambiar_password",id="#{val.id}",data-toggle="modal",data-target="#myModal2")="Cambiar Clave"
+		div.consola.well="Consola"
+	div(class="modal fade",id="myModal")
+		div(class="modal-dialog")
+			div(class="modal-content")
+				div(class="modal-header")
+					button(type="button",class="close",data-dismiss="modal",aria-label="Close")
+						span(aria-hidden="true") &times;
+					h4(class="modal-title")="Crear Nuevo Usuario"
+				div(class="modal-body")
+					form(method="post",id="form_nuevo_usuario")
+						div.form-group
+							label="Correo"
+							input(type="email",name="correo",required="required",placeholder="Correo...",class="form-control")
+						div.form-group
+							label="Contraseña"
+							input(type="password",name="password",required="required",placeholder="Contraseña...",class="form-control")
+				div(class="modal-footer")
+					button(type="button",class="btn btn-default",data-dismiss="modal")="Cerrar"
+					button(type="button",class="btn btn-primary",id="btn_crear_usuario")="Guardar"
+
+	div(class="modal fade",id="myModal2")
+		div(class="modal-dialog")
+			div(class="modal-content")
+				div(class="modal-header")
+					button(type="button",class="close",data-dismiss="modal",aria-label="Close")
+						span(aria-hidden="true") &times;
+					h4(class="modal-title")="Cambio de Clave"
+				div(class="modal-body")
+					form(method="post",id="form_cambio_clave")
+						div.form-group
+							label="Contraseña"
+							input(type="password",name="password",required="required",placeholder="Contraseña...",class="form-control")
+				div(class="modal-footer")
+					button(type="button",class="btn btn-default",data-dismiss="modal")="Cerrar"
+					button(type="button",class="btn btn-primary",id="btn_cambio_clave")="Guardar"

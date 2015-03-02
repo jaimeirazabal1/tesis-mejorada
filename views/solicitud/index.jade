@@ -1,0 +1,31 @@
+extends ../layout
+block content
+	script(src="/javascripts/solicitud/index.js")
+	div.container
+		a(href="nueva")="Nueva Solicitud"
+		table.table
+			thead
+				th="Prioridad"
+				th="Descripción"
+				th="Fecha"
+				th="Usuario"
+				th="Activo"
+				th="Solicitante"
+				th="Tlf. Solicitante"
+				th="Ubicación"
+			tbody#cuerpo_tabla
+				each value in resultados
+					tr
+						td=value.prioridad
+						td=value.descripcion
+						td=value.fecha
+						td=value.correo.split('@')[0]
+						if	value.activo
+							td
+								input(type="button",id="#{value.id}",class="solicitud_activacion btn btn-success btn-xs",value="Desactivar")
+						else
+							td
+								input(type="button",id="#{value.id}",class="solicitud_activacion btn btn-danger btn-xs",value="Activar")
+						td=value.solicitante
+						td=value.telefono_solicitante
+						td=value.ubicacion

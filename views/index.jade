@@ -1,0 +1,16 @@
+extends layout
+
+block content
+	script(src="/javascripts/index.js")
+	if title
+		p=title
+	div(class="login-container")
+			div(id="output")
+			div
+				h2="Login"
+				br
+			div(class="form-box")
+				form(action="/users/login" method="post")
+					input(name="correo",required,type="text",placeholder="Nombre de Usuario",id="username")
+					input(type="password",required,placeholder="Contraseña",id="password",name="password")
+					button(class="btn btn-info btn-block login",type="submit")="Entrar"
